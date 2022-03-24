@@ -17,7 +17,8 @@ def handle_remote_command(command_args):
 	elif remote_command == "list":
 		try:
 			# TODO: List Processes along with their status
-			...
+			for process in processes:
+				print(process)
 		except:
 			print("Error")
 
