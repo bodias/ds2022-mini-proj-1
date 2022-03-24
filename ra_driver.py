@@ -1,4 +1,5 @@
 import sys
+from process import Process
 
 processes = []
 
@@ -56,7 +57,9 @@ def initialize_processes(process_count):
 			# 		State: (HELD, WANTED, and DO-NOT-WANT) default: DO-NOT-WANT
 			# 		timeout-lower-bound: Fixed 5
 			# 		timeout-upper-bound: default 5
-		...		
+		process = Process(f"P{process_id + 1}", "do_not_want")
+		processes.append(process)
+		
 	# Instantiate Critical Section.
 		# args: state: HELD or Available
 		# 		Held by: Process_id
