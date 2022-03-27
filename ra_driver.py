@@ -1,7 +1,8 @@
 import sys
 from process import Process
+from multiprocessing import Queue
 
-processes = []
+processes, message_queues = [], {}
 
 def handle_remote_command(command_args):
 	remote_command = command_args[0]
@@ -40,9 +41,8 @@ def handle_remote_command(command_args):
 			if len(command_args) != 2 or not command_args[1].isdigit():
 				print("Usage: 'time-p <time(seconds)>'")
 			else:
-				...
-				# TODO: Handle time-p call
-					# args: command_args[1] - Timeout interval for all processes
+				for process in processes:
+					process.set_timeout_upper(int(command_args[1]))
 		except:
 			print("Error")
 
@@ -59,6 +59,7 @@ def initialize_processes(process_count):
 			# 		timeout-lower-bound: Fixed 5
 			# 		timeout-upper-bound: default 5
 		process = Process(f"P{process_id + 1}", "do_not_want")
+		message_queues[f"P{process_id + 1}"] = Queue()
 		processes.append(process)
 		
 	# Instantiate Critical Section.
@@ -68,11 +69,16 @@ def initialize_processes(process_count):
 		# 		timeout-upper-bound: default 10
 
 
-
+	for process in processes:
+		process.start(processes, message_queues)
 
 if __name__ == '__main__':
 	if len(sys.argv) > 1:
-		initialize_processes(int(sys.argv[1]))
+		if int(sys.argv[1]) > 0:
+			initialize_processes(int(sys.argv[1]))
+		else:
+			print("No of processes cannot be less than 1.")
+			sys.exit(0)
 	else:
 		print("Usage: 'driver_service.py <number_of_processes>'")
 		sys.exit(0)
