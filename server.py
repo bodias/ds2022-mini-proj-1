@@ -27,7 +27,7 @@ class ProcessService(rpyc.Service):
 		return self.process
 
 	def exposed_set_timeout_upper(self, timeout_upper):
-		self.process.timeout_upper = timeout_upper
+		self.process.set_timeout_upper(timeout_upper)
 		return None
 
 	def exposed_get_callback(self, external_timestamp):
