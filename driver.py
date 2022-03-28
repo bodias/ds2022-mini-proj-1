@@ -44,7 +44,8 @@ def handle_remote_command(command_args):
 			if len(command_args) != 2 or not command_args[1].isdigit():
 				print("Usage: 'time-p <time(seconds)>'")
 			else:
-				...
+				for connection in connections:
+					connection.root.set_timeout_upper(int(command_args[1]))
 		except:
 			print("Error")
 
