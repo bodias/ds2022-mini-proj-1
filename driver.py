@@ -58,6 +58,17 @@ class ClientService(rpyc.Service):
 		self._conn = conn
 		print("\nconnected on {}".format(date_time))
 
+	def exposed_request_access(self, external_timestamp):
+		flag = True
+		# TODO: Ask other connenctions for CS with own timestamp
+		for connection in connections:
+			if connection != self._conn:
+				flag = flag and connection.root.get_callback(external_timestamp)
+		if flag:
+			return True
+		else: 
+			return False
+
 	def on_disconnect(self, conn):  
 		print("disconnected on {}\n".format(date_time))
 
@@ -68,7 +79,7 @@ def initialize_connections(process_count):
 		conn.root.init_process(f"P{process_id + 1}", "do_not_want")
 		print(f"Process P{process_id + 1} initialized")
 		connections.append(conn)
-		
+
 
 	# TODO: Critical Section
 	# Instantiate Critical Section.
