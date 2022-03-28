@@ -26,6 +26,21 @@ class ProcessService(rpyc.Service):
 	def exposed_get_state(self):
 		return self.process
 
+	def exposed_set_timeout_upper(self, timeout_upper):
+		self.process.timeout_upper = timeout_upper
+		return None
+
+	def exposed_get_callback(self, external_timestamp):
+		if self.process.state == "do_not_want":
+			return True
+		elif self.process.getMonotonic() > external_timestamp:
+			return True
+		else:
+			return False
+
+	def request_CS(self):
+		return self._conn.root.request_access(self.process.getMonotonic())
+
 	def on_disconnect(self,conn):  
 		print("disconnected on {}\n".format(date_time))
 
