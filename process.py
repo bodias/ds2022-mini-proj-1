@@ -32,8 +32,7 @@ class Process:
 			timeout = random.randint(timeout_lower, self.timeout_upper)
 			self.timer = timeout
 			if self.state == "want":
-				# TODO: Trigger CS REQUEST
-				...
+				print(self.id, self.state, conn.request_CS())
 			while self.timer:
 				self.countdown()
 			self.change_state()
