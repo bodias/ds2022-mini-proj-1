@@ -17,7 +17,7 @@ class ProcessService(rpyc.Service):
 
 	def on_connect(self,conn):
 		self._conn = conn
-		print("\nconnected on {}".format(date_time))
+		# print("\nConnected on {}".format(date_time))
 	
 	def exposed_init_process(self, thread_ID, state):
 		self.process = Process(thread_ID, state)
@@ -49,17 +49,19 @@ class ProcessService(rpyc.Service):
 
 	def request_CS(self):
 		"""
-			Propogate cs_request from ProcessThread instance to ClientService instance
+			Propagate cs_request from ProcessThread instance to ClientService instance
 		"""
 		return self._conn.root.request_access(self.process.getMonotonic())
 
 	def on_disconnect(self,conn):  
-		print("disconnected on {}\n".format(date_time))
+		# print("disconnected on {}\n".format(date_time))
+		...
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
 	try:
-		t=ThreadedServer(ProcessService, port=18812)
-		t.start()
+		server = ThreadedServer(ProcessService, port=18812)
+		server.start()
 	except Exception as e:
 		raise e
 	finally:

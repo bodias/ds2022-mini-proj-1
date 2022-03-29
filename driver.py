@@ -10,6 +10,7 @@ date_time = datetime.datetime.now()
 
 connections = []
 
+
 def handle_remote_command(command_args):
 	remote_command = command_args[0]
 	if len(command_args) > 3:
@@ -18,12 +19,13 @@ def handle_remote_command(command_args):
 	# handle exit
 	elif remote_command == "exit":
 		print("Exiting program")
-		# TODO: kill process threads
-		sys.exit(0)
+		exit_program()
 	# handle list
 	elif remote_command == "list":
 		try:
-			# TODO: List Processes along with their status
+			"""
+				Iterate through all connections and fetch process states
+			"""
 			for connection in connections:
 				print(connection.root.get_state())
 		except Exception as E:
@@ -35,11 +37,11 @@ def handle_remote_command(command_args):
 			if len(command_args) != 2 or not command_args[1].isdigit():
 				print("Usage: 'time-cs <time(seconds)>'")
 			else:
+				# TODO: Handle time-cs
+				# 	args: command_args[1] - Timeout for critical section
 				...
-				# TODO: Handle time-cs  
-					# args: command_args[1] - Timeout for critical section
-		except:
-			print("Error")
+		except Exception as E:
+			print("Error: ", E)
 
 	# handle clock
 	elif remote_command == "time-p":
@@ -58,9 +60,12 @@ def handle_remote_command(command_args):
 
 
 class ClientService(rpyc.Service):
+	def __init__(self):
+		self._conn = None
+
 	def on_connect(self, conn):
 		self._conn = conn
-		print("\nconnected on {}".format(date_time))
+		# print("\nConnected on {}".format(date_time))
 
 	def exposed_request_access(self, external_timestamp):
 		"""
@@ -78,11 +83,12 @@ class ClientService(rpyc.Service):
 				flag = flag and connection.root.cs_request_callback(external_timestamp)
 		if flag:
 			return True
-		else: 
+		else:
 			return False
 
-	def on_disconnect(self, conn):  
-		print("disconnected on {}\n".format(date_time))
+	def on_disconnect(self, conn):
+		# print("disconnected on {}\n".format(date_time))
+		...
 
 
 def initialize_connections(process_count):
@@ -101,23 +107,30 @@ def initialize_connections(process_count):
 				timeout-upper-bound: default 10
 		"""
 
-def runProcessService(server):
+
+def run_process_service(server):
 	server.start()
 
 
-if __name__=='__main__':
-	# To run Server and driver processes together, uncomment block below
-	
-	"""
+def exit_program():
+	for connection in connections:
+		connection.close()
+	sys.exit(0)
+
+
+if __name__ == '__main__':
+	# To run Server and driver processes separately, comment block between two '#' below and run server in separate
+	# terminal
+
+	#
 	process_service = ThreadedServer(ProcessService, port=18812)
 	try:
 		# Launching the RPC server in a separate daemon thread (killed on exit)
-		server_thread = threading.Thread(target=runProcessService, args=(process_service,), daemon=True)
+		server_thread = threading.Thread(target=run_process_service, args=(process_service,), daemon=True)
 		server_thread.start()
 	except KeyboardInterrupt:
 		...
-	"""
-	
+	#
 	if len(sys.argv) > 1:
 		if int(sys.argv[1]) > 0:
 			initialize_connections(int(sys.argv[1]))
@@ -128,6 +141,11 @@ if __name__=='__main__':
 		print("Usage: 'driver_service.py <number_of_connections>'")
 		sys.exit(0)
 
-	while True:
-		command = input("$ ")
-		handle_remote_command(command.lower().split(" "))
+	try:
+		while True:
+			command = input("$ ")
+			handle_remote_command(command.lower().split(" "))
+	except KeyboardInterrupt as e:
+		print("Exiting")
+	finally:
+		exit_program()
