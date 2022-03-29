@@ -1,7 +1,10 @@
 import sys
 import rpyc
+import time
 import datetime
+import threading
 from rpyc.utils.server import ThreadedServer
+from server import ProcessService
 
 date_time = datetime.datetime.now()
 
@@ -49,7 +52,7 @@ def handle_remote_command(command_args):
 		except:
 			print("Error")
 
-	# handle unsupported command        
+	# handle unsupported command
 	else:
 		print("Unsupported command:", remote_command)
 
@@ -60,8 +63,16 @@ class ClientService(rpyc.Service):
 		print("\nconnected on {}".format(date_time))
 
 	def exposed_request_access(self, external_timestamp):
+		"""
+			When ProcessThread with "WANTED" state requests access to the Critical Section,
+			This method brodcasts the request to other ProcessThread connenctions with their timestamp
+			
+			If all methods return positive callback from Remote procedure (get_callback) call,
+				TODO: Notify calling ProcessThread, and Take over CS
+			Else:
+				TODO: Notify negative response to calling ProcessThread.
+		"""
 		flag = True
-		# TODO: Ask other connenctions for CS with own timestamp
 		for connection in connections:
 			if connection != self._conn:
 				flag = flag and connection.root.get_callback(external_timestamp)
@@ -80,17 +91,18 @@ def initialize_connections(process_count):
 		conn.root.init_process(f"P{process_id + 1}", "do_not_want")
 		print(f"Process P{process_id + 1} initialized")
 		connections.append(conn)
+		"""
+			TODO: Critical Section
+			Instantiate Critical Section.
+			args: 
+				state: HELD or Available
+				Held by: Process_id
+				timeout-lower-bound: fixed 10
+				timeout-upper-bound: default 10
+		"""
 
-
-	# TODO: Critical Section
-	# Instantiate Critical Section.
-		# args: state: HELD or Available
-		# 		Held by: Process_id
-		# 		timeout-lower-bound: fixed 10
-		# 		timeout-upper-bound: default 10
 
 if __name__=='__main__':
-	
 	if len(sys.argv) > 1:
 		if int(sys.argv[1]) > 0:
 			initialize_connections(int(sys.argv[1]))
