@@ -24,13 +24,22 @@ class ProcessService(rpyc.Service):
 		self.process.start(self)
 
 	def exposed_get_state(self):
-		return self.process
+		"""
+			Passing ProcessThread to driver (for LIST command)
+		"""
+		return self.process.get_state()
 
 	def exposed_set_timeout_upper(self, timeout_upper):
+		"""
+			Updating Process Timeout in ProcessThread (for TIME-P command)
+		"""
 		self.process.set_timeout_upper(timeout_upper)
 		return None
 
 	def exposed_cs_request_callback(self, external_timestamp):
+		"""
+			Check Process Monotonic clock and formulate response for Calling ClientService
+		"""
 		if self.process.state == "do_not_want":
 			return True
 		elif self.process.getMonotonic() > external_timestamp:
@@ -39,6 +48,9 @@ class ProcessService(rpyc.Service):
 			return False
 
 	def request_CS(self):
+		"""
+			Propogate cs_request from ProcessThread instance to ClientService instance
+		"""
 		return self._conn.root.request_access(self.process.getMonotonic())
 
 	def on_disconnect(self,conn):  
