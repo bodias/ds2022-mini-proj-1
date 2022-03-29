@@ -101,8 +101,23 @@ def initialize_connections(process_count):
 				timeout-upper-bound: default 10
 		"""
 
+def runProcessService(server):
+	server.start()
+
 
 if __name__=='__main__':
+	# To run Server and driver processes together, uncomment block below
+	
+	"""
+	process_service = ThreadedServer(ProcessService, port=18812)
+	try:
+		# Launching the RPC server in a separate daemon thread (killed on exit)
+		server_thread = threading.Thread(target=runProcessService, args=(process_service,), daemon=True)
+		server_thread.start()
+	except KeyboardInterrupt:
+		...
+	"""
+	
 	if len(sys.argv) > 1:
 		if int(sys.argv[1]) > 0:
 			initialize_connections(int(sys.argv[1]))
