@@ -67,7 +67,7 @@ class ClientService(rpyc.Service):
 			When ProcessThread with "WANTED" state requests access to the Critical Section,
 			This method brodcasts the request to other ProcessThread connenctions with their timestamp
 			
-			If all methods return positive callback from Remote procedure (get_callback) call,
+			If all methods return positive callback from Remote procedure (cs_request_callback) call,
 				TODO: Notify calling ProcessThread, and Take over CS
 			Else:
 				TODO: Notify negative response to calling ProcessThread.
@@ -75,7 +75,7 @@ class ClientService(rpyc.Service):
 		flag = True
 		for connection in connections:
 			if connection != self._conn:
-				flag = flag and connection.root.get_callback(external_timestamp)
+				flag = flag and connection.root.cs_request_callback(external_timestamp)
 		if flag:
 			return True
 		else: 

@@ -30,7 +30,7 @@ class ProcessService(rpyc.Service):
 		self.process.set_timeout_upper(timeout_upper)
 		return None
 
-	def exposed_get_callback(self, external_timestamp):
+	def exposed_cs_request_callback(self, external_timestamp):
 		if self.process.state == "do_not_want":
 			return True
 		elif self.process.getMonotonic() > external_timestamp:
