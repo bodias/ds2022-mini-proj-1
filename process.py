@@ -59,7 +59,7 @@ class Process:
 		time.sleep(1)
 		self.timer -= 1
 
-	def getMonotonic(self):
+	def get_timestamp(self):
 		return time.monotonic()
 
 
