@@ -38,11 +38,20 @@ class Process:
 			timeout = random.randint(timeout_lower, self.timeout_upper)
 			self.timer = timeout
 			if self.state == "want":
-				print(self.id, self.state, conn.request_CS())
-			if self.state == "held":
-				...
-			if self.state == "do_not_want":
-				...
+				schedule_work = conn.request_CS()
+				if schedule_work:
+					success = conn.access_CS()
+					# print(f"{self.id} is attempting taking over Critical Section.")
+					if success:
+						# print(f"{self.id} is holding Critical Section.")
+						self.set_state("held")
+					else:
+						# print(f"{self.id}:: Failed to access Critical Section")
+						...
+				# TODO: Remove empty else cases and print Statements after development.
+				else:
+					# print(f"{self.id}:: Failed to access Critical Section")
+					...
 			while self.timer:
 				self.countdown()
 			self.change_state()
