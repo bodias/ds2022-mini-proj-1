@@ -30,6 +30,7 @@ class Process:
 	def run(self, conn):
 		"""
 			Run background Tasks for process.
+			
 			1. Get new Timeout length
 			2. check state and decide tasks to be performed accordingly.
 			3. Update timer in loop and then Change state after timing out
@@ -85,4 +86,9 @@ class Process:
 
 
 	def change_state(self):
-		self.set_state(random.choice(["want", "do_not_want"]))
+		if self.state not "held":
+			self.set_state(random.choice(["want", "do_not_want"]))
+
+
+	def release_CS(self):
+		self.set_state("do_not_want")
