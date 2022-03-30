@@ -86,6 +86,15 @@ class ClientService(rpyc.Service):
 		else:
 			return False
 
+	def exposed_hold_CS(self, conn_ID):
+		"""
+			TODO:
+				1. Access current critical section state,
+					a. If critial section is Free, allow access to the process. Return True
+					b. If critial section is Held, deny access to the process. Return False
+		"""
+		return True
+
 	def on_disconnect(self, conn):
 		# print("disconnected on {}\n".format(date_time))
 		...
