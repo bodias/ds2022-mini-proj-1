@@ -2,10 +2,10 @@ import _thread
 import random
 import time
 from constants import timeout_lower, process_states
-import queue
+
 
 class Process:
-	def __init__(self, process_id, state, timestamp = 0, timeout_upper = 5):
+	def __init__(self, process_id, state, timeout_upper = 5):
 		"""
 			args: 
 				process_id: f'P{process_id + 1}'
@@ -23,7 +23,6 @@ class Process:
 
 	__repr__ = __str__
 
-
 	def start(self, conn):
 		_thread.start_new_thread(self.run, (conn,))
 
@@ -39,9 +38,9 @@ class Process:
 			timeout = random.randint(timeout_lower, self.timeout_upper)
 			self.timer = timeout
 			if self.state == "want":
-				schedule_work = conn.request_CS()
+				schedule_work = conn.request_critical_section()
 				if schedule_work:
-					success = conn.access_CS()
+					success = conn.access_critical_section()
 					# print(f"{self.id} is attempting taking over Critical Section.")
 					if success:
 						# print(f"{self.id} is holding Critical Section.")
@@ -56,7 +55,6 @@ class Process:
 			while self.timer:
 				self.countdown()
 			self.change_state()
-
 
 	"""
 		Timeout manipulation and Timer support methods 
@@ -84,11 +82,9 @@ class Process:
 	def get_state(self):
 		return self.__str__()
 
-
 	def change_state(self):
-		if self.state not "held":
+		if self.state != "held":
 			self.set_state(random.choice(["want", "do_not_want"]))
 
-
-	def release_CS(self):
+	def release_critical_section(self):
 		self.set_state("do_not_want")

@@ -59,48 +59,8 @@ def handle_remote_command(command_args):
 		print("Unsupported command:", remote_command)
 
 
-class ClientService(rpyc.Service):
-	def __init__(self):
-		self._conn = None
-
-	def on_connect(self, conn):
-		self._conn = conn
-		# print("\nConnected on {}".format(date_time))
-
-	def exposed_request_access(self, external_timestamp):
-		"""
-			When ProcessThread with "WANTED" state requests access to the Critical Section,
-			This method brodcasts the request to other ProcessThread connenctions with their timestamp
-			
-			If all methods return positive callback from Remote procedure (cs_request_callback) call,
-				TODO: Notify calling ProcessThread, and Take over CS
-			Else:
-				TODO: Notify negative response to calling ProcessThread.
-		"""
-		flag = True
-		for connection in connections:
-			if connection != self._conn:
-				flag = flag and connection.root.cs_request_callback(external_timestamp)
-		if flag:
-			return True
-		else:
-			return False
-
-	def exposed_hold_CS(self, conn_ID):
-		"""
-			TODO:
-				1. Access current critical section state,
-					a. If critial section is Free, allow access to the process. Return True
-					b. If critial section is Held, deny access to the process. Return False
-		"""
-		return True
-
-	def on_disconnect(self, conn):
-		# print("disconnected on {}\n".format(date_time))
-		...
-
-
 def initialize_connections(process_count):
+	from client import ClientService
 	for process_id in range(process_count):
 		conn = rpyc.connect("localhost", 18812, service = ClientService)
 		conn.root.init_process(f"P{process_id + 1}", "do_not_want")
@@ -131,15 +91,15 @@ if __name__ == '__main__':
 	# To run Server and driver processes separately, comment block between two '#' below and run server in separate
 	# terminal
 
-	#
-	process_service = ThreadedServer(ProcessService, port=18812)
+	"""
+	process_service = ThreadedServer(ProcessService, port = 18812)
 	try:
 		# Launching the RPC server in a separate daemon thread (killed on exit)
 		server_thread = threading.Thread(target=run_process_service, args=(process_service,), daemon=True)
 		server_thread.start()
 	except KeyboardInterrupt:
 		...
-	#
+	"""
 	if len(sys.argv) > 1:
 		if int(sys.argv[1]) > 0:
 			initialize_connections(int(sys.argv[1]))

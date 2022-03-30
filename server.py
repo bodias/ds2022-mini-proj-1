@@ -12,15 +12,18 @@ date_time = datetime.datetime.now()
 data, replicas = None, []
 
 
-
 class ProcessService(rpyc.Service):
+
+	def __init__(self):
+		self.process = None
+		self._conn = None
 
 	def on_connect(self,conn):
 		self._conn = conn
 		# print("\nConnected on {}".format(date_time))
 	
-	def exposed_init_process(self, thread_ID, state):
-		self.process = Process(thread_ID, state)
+	def exposed_init_process(self, thread_id, state):
+		self.process = Process(thread_id, state)
 		self.process.start(self)
 
 	def exposed_get_state(self):
@@ -61,32 +64,32 @@ class ProcessService(rpyc.Service):
 				return True
 		return False
 
-	def request_CS(self):
+	def request_critical_section(self):
 		"""
 			Propagate cs_request from ProcessThread instance to ClientService instance
 		"""
 		return self._conn.root.request_access(self.process.get_timestamp())
 
-	def access_CS(self):
+	def access_critical_section(self):
 		"""
 			Propagate cs_access call from ProcessThread instance to ClientService instance
 		"""
-		return self._conn.root.hold_CS(self.process.id)
+		return self._conn.root.hold_critical_section(self.process.id)
 
-	def exposed_release_CS(self):
+	def exposed_release_critical_section(self):
 		"""
-			Propagate CS RELEASE call from ClientService instance to ProcessThread instance
+			Propagate critical_section RELEASE call from ClientService instance to ProcessThread instance
 		"""
-		return self.process.release_CS()
+		return self.process.release_critical_section()
 
-	def on_disconnect(self,conn):  
+	def on_disconnect(self, conn):
 		# print("disconnected on {}\n".format(date_time))
 		...
 
 
 if __name__ == '__main__':
 	try:
-		server = ThreadedServer(ProcessService, port=18812)
+		server = ThreadedServer(ProcessService, port = 18812)
 		server.start()
 	except Exception as e:
 		raise e
