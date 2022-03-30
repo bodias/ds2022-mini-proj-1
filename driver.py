@@ -88,10 +88,10 @@ def exit_program():
 
 
 if __name__ == '__main__':
-	# To run Server and driver processes separately, comment block between two '#' below and run server in separate
+	# To run Server and driver processes separately, comment the following code block and run server in separate
 	# terminal
 
-	"""
+	# """
 	process_service = ThreadedServer(ProcessService, port = 18812)
 	try:
 		# Launching the RPC server in a separate daemon thread (killed on exit)
@@ -99,7 +99,8 @@ if __name__ == '__main__':
 		server_thread.start()
 	except KeyboardInterrupt:
 		...
-	"""
+	# """
+
 	if len(sys.argv) > 1:
 		if int(sys.argv[1]) > 0:
 			initialize_connections(int(sys.argv[1]))
