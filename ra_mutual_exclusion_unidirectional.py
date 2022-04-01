@@ -6,6 +6,8 @@ import rpyc
 from rpyc.utils.server import ThreadedServer
 #from Queue import Queue
 #import Queue
+PROC_TIMEOUT_LOWER = 5
+CS_TIMEOUT_LOWER = 10
 
 class State(enum.Enum):
     DO_NOT_WANT = 0
@@ -33,28 +35,43 @@ class Message(object):
         return f"Message {self.type} at {self.timestamp} from {self.sender} to {self.receiver}"
 
 class Process:
-    def __init__(self, name, server_port, cs_timeout, process_timeout):
-        self.name = name        
-        self.server_port = server_port
-        self.timestamp = 1
+    def __init__(self, id, server_port, cs_timeout_upper=10, proc_timeout_upper=5):
+        self.id = id        
         self._state = State.DO_NOT_WANT
-        self._cs_timeout = cs_timeout
-        self._process_timeout = process_timeout
+        self._cs_timeout_upper = cs_timeout_upper
+        self._proc_timeout_upper = proc_timeout_upper
+        self.server_port = server_port
         self._comm_server = CommServer(self, self.server_port)
         self.outgoing_conn = {}
         self.incoming_msg_queue = []
         self.request_resource_confirmation = []
         self.request_timestamp = None
+        self._timer = None
+
+    def __str__(self):
+        return f"{self.id}, {self._state}"
+
+    __repr__ = __str__
+    
+    def set_proc_timeout_upper(self, proc_timeout_upper):
+        self._proc_timeout_upper = max(proc_timeout_upper, PROC_TIMEOUT_LOWER)
+
+    def get_timestamp(self):
+        return time.monotonic()
+
+    def countdown(self):
+        time.sleep(1)
+        self._timer -= 1
 
     def connect_to(self, process):
         try:
             conn = rpyc.connect(host="localhost", port=process.server_port, service=Communication(ServerType.CLIENT, self))
-            self.outgoing_conn[process.name] = conn
+            self.outgoing_conn[process.id] = conn
         except:
             # TODO: deal with exception
             raise
     
-    def start(self):
+    def start_comms(self):
         # self.comm_server has its own thread and won't block the process
         self._comm_server.setDaemon(True)
         self._comm_server.start()        
@@ -73,7 +90,7 @@ class Process:
             # 1. receiver is not accessing the resource and doesn't want to access it
             #   OUTCOME: Send OK to back to sender
             if self._state == State.DO_NOT_WANT:
-                ack_message = Message(MessageType.ACK, time.monotonic(), self.name, msg.sender)
+                ack_message = Message(MessageType.ACK, self.get_timestamp(), self.id, msg.sender)
                 self.send_message(ack_message)
              # 2. Receiver already has access to the resource
              #   OUTCOME: Don't reply, queue the request
@@ -85,7 +102,7 @@ class Process:
             #       Otherwise receiver queues incoming request and send nothing back
             elif self._state == State.WANTED:
                 if self.request_timestamp > msg.timestamp:
-                    ack_message = Message(MessageType.ACK, time.monotonic(), self.name, msg.sender)
+                    ack_message = Message(MessageType.ACK, self.get_timestamp(), self.id, msg.sender)
                     self.send_message(ack_message)
                 else:
                     self.incoming_msg_queue.append(msg)
@@ -99,12 +116,6 @@ class Process:
         else:
             print("Unknown message type")
 
-    def set_state(self, state):
-        self._state = state
-    
-    def get_state(self):
-        return self._state
-
     def is_resource_available(self):
         connected_processes = sorted(list(self.outgoing_conn.keys()))
         confirmation_received = [msg.sender for msg in self.request_resource_confirmation]
@@ -115,42 +126,51 @@ class Process:
             return True
         return False    
     
-    def change_state(self):
-        # If process is in DO_NO_WANT state randomly change to WANTED
-        # If any other state (WANTED, HELD) don't do anything since these
-        # changes are triggered by communication
-        if self._state == State.DO_NOT_WANT:
-            self._state(random.choice([State.DO_NOT_WANT, State.WANTED]))
+    # def change_state(self):
+    #     # If process is in DO_NO_WANT state randomly change to WANTED
+    #     # If any other state (WANTED, HELD) don't do anything since these
+    #     # changes are triggered by communication
+    #     if self._state == State.DO_NOT_WANT:
+    #         self._state(random.choice([State.DO_NOT_WANT, State.WANTED]))
     
     def lock_resource(self):
         # change state to HELD
         self._state = State.HELD
-        print(f"{self.name} locked resource")
+        print(f"{self.id} locked resource")
 
     def request_resource(self):
         # send request message to all other process (broadcast)     
         self._state = State.WANTED
-        print(f"{self.name} requested resource")
-        self.request_timestamp = time.monotonic()
+        print(f"{self.id} requested resource")
+        self.request_timestamp = self.get_timestamp()
         self.request_resource_confirmation = []
         for process, _ in self.outgoing_conn.items():       
-            request_msg = Message(MessageType.REQUEST, self.request_timestamp, self.name, process)
+            request_msg = Message(MessageType.REQUEST, self.request_timestamp, self.id, process)
             self.send_message(request_msg)
 
     def release_resource(self):
         # send back OK message to all waiting in the queue
         self._state = State.DO_NOT_WANT
-        print(f"{self.name} released resource")
+        print(f"{self.id} released resource")
         for msg in self.incoming_msg_queue:
-            self.send_message(Message(MessageType.ACK, time.monotonic, self.name, msg.sender))
+            self.send_message(Message(MessageType.ACK, time.monotonic, self.id, msg.sender))
     
-    def run(self):
-        # Process manages its own resources
-        # - Process timeout
-        # - CS timeout
+    # def run(self):
+    #     # Process manages its own resources
+    #     # - Process timeout
+    #     # - CS timeout
+    #     while True:
+    #         action = None
+    #         if self._state == State.DO_NOT_WANT:
+    #             self._timer = random.randint(PROC_TIMEOUT_LOWER, self._proc_timeout_upper)
+    #             action = random.choice([None, self.request_resource])
+    #         elif self._state == State.HELD:
+    #             self._timer = random.randint(CS_TIMEOUT_LOWER, self._cs_timeout_upper)
+    #             action = self.release_resource
 
-        while True:
-            pass
+    #         while self._timer:
+    #             self.countdown()
+    #         action()            
 
 
 # Only needed to be an independent thread on the ThreadedServer
@@ -172,17 +192,17 @@ class Communication(rpyc.Service):
         self.process = process
         self._conn = None
         if self.server_type == ServerType.SERVER:
-            print(f"Initializing communication server in {self.process.name}")
+            print(f"Initializing communication server in {self.process.id}")
         elif self.server_type == ServerType.CLIENT:
-            print(f"Initializing communication client in {self.process.name}")
+            print(f"Initializing communication client in {self.process.id}")
         
     def on_connect(self, conn):
         self._conn = conn
-        incomming_conn_name = self._conn.root.get_process_name()        
-        print(f"{self.server_type} {self.process.name} accepted connection from {incomming_conn_name}")
+        incomming_conn_id = self._conn.root.get_process_id()        
+        print(f"{self.server_type} {self.process.id} accepted connection from {incomming_conn_id}")
     
-    def exposed_get_process_name(self):
-        return self.process.name
+    def exposed_get_process_id(self):
+        return self.process.id
 
     def exposed_process_message(self, msg_type, timestamp, sender, receiver):
         """
@@ -191,7 +211,7 @@ class Communication(rpyc.Service):
         """
         print(f"Handling msg {str(msg_type)} from 'Communication' class")        
         # This was causing lock because it triggers communication on the opposite direction
-        #sender = self._conn.root.get_process_name()
+        #sender = self._conn.root.get_process_id()
         self.process.process_incoming_message(Message(MessageType(msg_type), timestamp, sender, receiver))
 
 if __name__=="__main__":
@@ -200,11 +220,11 @@ if __name__=="__main__":
     P_B = Process("B", 18813, 10, 5)
     P_C = Process("C", 18814, 10, 5)
 
-    P_A.start() 
+    P_A.start_comms() 
     print("Server A started")
-    P_B.start()
+    P_B.start_comms()
     print("Server B started")
-    P_C.start()
+    P_C.start_comms()
     print("Server C started")
 
     
