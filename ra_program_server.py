@@ -5,8 +5,14 @@ import rpyc
 import datetime
 import threading
 from rpyc.utils.server import ThreadedServer
-from process_service import ProcessService
 from critical_section import CriticalSection
+from constants import cs_default_timeout, timeout_lower
+
+if len(sys.argv) > 1 and sys.argv[1] == "--verbose":
+	verbose = True
+else:
+	verbose = False
+
 
 date_time = datetime.datetime.now()
 
@@ -25,6 +31,7 @@ connections, critical_section = [], CriticalSection()
 			default 10
 """
 
+
 class ListenerService(rpyc.Service):
 	def on_connect(self, conn):
 		print("connected to Client. Awaiting Process spawn")
@@ -37,7 +44,8 @@ class ListenerService(rpyc.Service):
 		for process_id in range(process_count):
 			conn = rpyc.connect("localhost", 18812, service = ConnectionService)
 			conn.root.init_process(f"P{process_id + 1}", "do_not_want")
-			print(f"Process P{process_id + 1} initialized")
+			if verbose:
+				print(f"SERVER: Process P{process_id + 1} initialized")
 			connections.append(conn)
 		return None
 
@@ -72,6 +80,7 @@ class ListenerService(rpyc.Service):
 					# Handle `time-cs`
 					# args: command_args[1] - Timeout for critical section
 					critical_section.set_timeout(int(command_args[1]))
+					print(f"Critical section timeout upper bound set to {max(cs_default_timeout, int(command_args[1]))}.")
 				return None
 			except Exception as E:
 				print("Error: ", E)
@@ -84,6 +93,7 @@ class ListenerService(rpyc.Service):
 				try:
 					for connection in connections:
 						connection.root.set_timeout_upper(int(command_args[1]))
+					print(f"Process timeout upper bound set to {max(timeout_lower, int(command_args[1]))}.")
 					return
 				except:
 					print("Error")
@@ -107,6 +117,7 @@ def exit_program():
 if __name__ == '__main__':
 	# To run Server and driver processes separately, comment the following code block and run server in separate
 	# terminal
+	from process_service import ProcessService
 	process_service = ThreadedServer(ProcessService, port = 18812)
 	listener_service = ThreadedServer(ListenerService, port = 18811)
 

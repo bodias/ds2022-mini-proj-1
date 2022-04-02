@@ -2,6 +2,7 @@ import _thread
 import random
 import time
 from constants import timeout_lower, process_states
+from ra_program_server import verbose
 
 
 class Process:
@@ -38,28 +39,31 @@ class Process:
 			timeout = random.randint(timeout_lower, self.timeout_upper)
 			self.timer = timeout
 			if self.state == "want":
-				schedule_work = conn.request_critical_section()
+				schedule_work = conn.request_critical_section(self.id)
 				if schedule_work:
-					# print(f"{self.id} is attempting taking over Critical Section.")
+					if verbose:
+						print(f"Process {self.id}: is attempting taking over Critical Section.")
 					cs_timeout = conn.access_critical_section()
 					if cs_timeout > 0:
-						# print(f"{self.id} is accessing Critical Section.")
+						if verbose:
+							print(f"Process {self.id}: has taken over the Critical Section.")
 						self.set_state("held")
 						self.timer = cs_timeout
 					else:
-						# print(f"{self.id}:: Failed to access Critical Section. CS is held by other process")
-						...
-				# uncomment print Statements to observe functionality. [x]
+						if verbose:
+							print(f"Process {self.id}: failed to access Critical Section. CS is already occupied")
 				else:
-					# print(f"{self.id}:: Failed to access Critical Section. Denied by other process")
-					...
+					if verbose:
+						print(f"Process {self.id}: Failed to access Critical Section. Denied by other process")
 			while self.timer:
 				self.countdown()
 			if self.state == "held":
-				# print(f"{self.id} releasing Critical Section.")
+				if verbose:
+					print(f"Process {self.id}: releasing Critical Section.")
 				conn.release_critical_section()
-				self.set_state("do_not_want")
-			self.change_state()
+				self.release_critical_section()
+			if self.state != "want":
+				self.change_state()
 
 	"""
 		Timeout manipulation and Timer support methods 

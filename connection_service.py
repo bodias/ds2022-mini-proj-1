@@ -1,6 +1,5 @@
 import rpyc
-import random
-from ra_program_server import connections, critical_section
+from ra_program_server import connections, critical_section, verbose
 
 
 class ConnectionService(rpyc.Service):
@@ -11,7 +10,7 @@ class ConnectionService(rpyc.Service):
 		self._conn = conn
 		# print("\nConnected on {}".format(date_time))
 
-	def exposed_request_access(self, external_timestamp):
+	def exposed_request_access(self, process_id, external_timestamp):
 		"""
 			When ProcessThread with "WANTED" state requests access to the Critical Section,
 			This method broadcasts the request to other ProcessThread connections with their timestamp
@@ -27,8 +26,11 @@ class ConnectionService(rpyc.Service):
 			if connection != self._conn:
 				flag = flag and connection.root.cs_request_callback(external_timestamp)
 		if flag:
+			if verbose:
+				print(f"ConnectionService: {process_id} received OK from all processes")
 			return True
-		print(flag)
+		if verbose:
+			print(f"ConnectionService: {process_id} received one or more denials.")
 		return False
 
 	def exposed_hold_critical_section(self, conn_id):

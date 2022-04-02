@@ -62,11 +62,11 @@ class ProcessService(rpyc.Service):
 		else:
 			return False
 
-	def request_critical_section(self):
+	def request_critical_section(self, process_id):
 		"""
 			Propagate cs_request from ProcessThread instance to ClientService instance
 		"""
-		return self._conn.root.request_access(self.process.get_timestamp())
+		return self._conn.root.request_access(process_id, self.process.get_timestamp())
 
 	def access_critical_section(self):
 		"""

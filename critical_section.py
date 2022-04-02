@@ -30,6 +30,7 @@ class CriticalSection:
 			self.held_by = process_id
 			self.state = "held"
 			return self.get_timeout()
+			print(self)
 		return 0
 
 	def release(self, process_id):
