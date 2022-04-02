@@ -3,7 +3,7 @@ import random
 from driver import connections, critical_section
 
 
-class ClientService(rpyc.Service):
+class ConnectionService(rpyc.Service):
 	def __init__(self):
 		self._conn = None
 
