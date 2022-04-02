@@ -1,6 +1,6 @@
 import rpyc
 import random
-from driver import connections, critical_section
+from ra_program_server import connections, critical_section
 
 
 class ConnectionService(rpyc.Service):

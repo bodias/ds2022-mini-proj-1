@@ -27,10 +27,10 @@ connections, critical_section = [], CriticalSection()
 
 class ListenerService(rpyc.Service):
 	def on_connect(self, conn):
-		...
+		print("connected to Client. Awaiting Process spawn")
 
 	def on_disconnect(self, conn):
-		...
+		exit_program()
 
 	def exposed_initialize_connections(self, process_count):
 		from connection_service import ConnectionService
@@ -43,6 +43,7 @@ class ListenerService(rpyc.Service):
 
 	def exposed_handle_remote_command(self, command_args):
 		remote_command = command_args[0]
+		print("\nReceived command: \t ", remote_command)
 		if len(command_args) > 3:
 			print("Too many arguments", command_args)
 
