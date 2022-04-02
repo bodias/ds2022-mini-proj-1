@@ -48,21 +48,22 @@ class ProcessService(rpyc.Service):
 				OUTCOME: Send OK to back to sender
 
 			2. Receiver already has access to the resource
-				OUTCOME: Don't reply, queue the request TODO: Keep?
+				TODO: IDEAL OUTCOME: Don't reply, queue the request
+				Current implementation: Reply the denial message.
 
 			3. Receiver is on the waiting list. Compare timestamps, lowest wins.
-				OUTCOME: 
+				OUTCOME:
 					If OWN timestamp > request Timestamp (current process loses), then send back OK
-					Otherwise receiver queues incoming request and send nothing back TODO: keep?
+					Otherwise receiver queues incoming request and send nothing back.
 		"""
 		if self.process.state == "do_not_want":
 			return True
 		elif self.process.state == "held":
 			return False
-		elif self.process.state == "want":
-			if self.process.get_timestamp() > external_timestamp:
-				return True
-		return False
+		elif self.process.state == "want" and self.process.get_timestamp() > external_timestamp:
+			return True
+		else:
+			return False
 
 	def request_critical_section(self):
 		"""
@@ -76,11 +77,11 @@ class ProcessService(rpyc.Service):
 		"""
 		return self._conn.root.hold_critical_section(self.process.id)
 
-	def exposed_release_critical_section(self):
+	def release_critical_section(self):
 		"""
 			Propagate critical_section RELEASE call from ClientService instance to ProcessThread instance
 		"""
-		return self.process.release_critical_section()
+		return self._conn.root.release_critical_section(self.process.id)
 
 	def on_disconnect(self, conn):
 		# print("disconnected on {}\n".format(date_time))

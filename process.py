@@ -40,20 +40,25 @@ class Process:
 			if self.state == "want":
 				schedule_work = conn.request_critical_section()
 				if schedule_work:
-					success = conn.access_critical_section()
 					# print(f"{self.id} is attempting taking over Critical Section.")
-					if success:
-						# print(f"{self.id} is holding Critical Section.")
+					cs_timeout = conn.access_critical_section()
+					if cs_timeout > 0:
+						# print(f"{self.id} is accessing Critical Section.")
 						self.set_state("held")
+						self.timer = cs_timeout
 					else:
-						# print(f"{self.id}:: Failed to access Critical Section")
+						# print(f"{self.id}:: Failed to access Critical Section. CS is held by other process")
 						...
-				# TODO: Remove empty else cases and print Statements after development.
+				# uncomment print Statements to observe functionality. [x]
 				else:
-					# print(f"{self.id}:: Failed to access Critical Section")
+					# print(f"{self.id}:: Failed to access Critical Section. Denied by other process")
 					...
 			while self.timer:
 				self.countdown()
+			if self.state == "held":
+				# print(f"{self.id} releasing Critical Section.")
+				conn.release_critical_section()
+				self.set_state("do_not_want")
 			self.change_state()
 
 	"""
@@ -69,8 +74,6 @@ class Process:
 
 	def get_timestamp(self):
 		return time.monotonic()
-
-
 
 	"""
 		getter and setter calls
