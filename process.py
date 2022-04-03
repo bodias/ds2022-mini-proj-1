@@ -18,6 +18,7 @@ class Process:
 		self.state = state
 		self.timeout_upper = timeout_upper
 		self.timer = None
+		self.timeout = None
 
 	def __str__(self):
 		return f"{self.id}, {process_states[self.state]}"
@@ -38,6 +39,7 @@ class Process:
 		while True:
 			timeout = random.randint(timeout_lower, self.timeout_upper)
 			self.timer = timeout
+			self.timeout = time.monotonic()
 			if self.state == "want":
 				schedule_work = conn.request_critical_section(self.id)
 				if schedule_work:
@@ -77,7 +79,7 @@ class Process:
 		self.timer -= 1
 
 	def get_timestamp(self):
-		return time.monotonic()
+		return time.monotonic() - self.timeout
 
 	"""
 		getter and setter calls
