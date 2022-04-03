@@ -34,7 +34,8 @@ connections, critical_section = [], CriticalSection()
 
 class ListenerService(rpyc.Service):
 	def on_connect(self, conn):
-		print("connected to Client. Awaiting Process spawn")
+		if verbose:
+			print("SERVER: connected to Client. Awaiting Process spawn")
 
 	def on_disconnect(self, conn):
 		exit_program()
