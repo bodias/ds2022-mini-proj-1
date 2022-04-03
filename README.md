@@ -6,6 +6,10 @@ Full Description of the task is [here](https://courses.cs.ut.ee/LTAT.06.007/2022
 
 ---------
 
+![Architecture](https://github.com/a3darekar/ds2022-mini-proj-1/blob/master/Architecture.jpg)
+
+---------
+
 ```text
 ./
 ├── .gitignore ----------------------------------- list of files im git commits
@@ -31,11 +35,11 @@ Full Description of the task is [here](https://courses.cs.ut.ee/LTAT.06.007/2022
 
 1. Install the requirement (just the one) from requirements.txt
 2. Open two command line interfaces. 
-3. Run the server. (optionally, pass --verbose to see algorithm's message hand-off logs.)
+3. Run the server. Optionally, pass `--verbose` flag to see algorithm's message hand-off logs.
 ```sh
 	python ra_program_server.py
 ```
-4. Run the client. Here, N denotes number of processes to be initialized.
+4. Run the client. Here, `N` denotes number of processes to be initialized.
 ```sh
 	python ra_program_client.py N
 ```
@@ -61,6 +65,6 @@ Full Description of the task is [here](https://courses.cs.ut.ee/LTAT.06.007/2022
 
 ## TODO:
 
-1. Vigorous Testing.
-2. Test effect of asynchronous callbacks over synchronous.
-3. Proper Documentation.
+1. More Testing.
+2. Observe effect of asynchronous callbacks over synchronous.
+3. Documentation.
