@@ -63,7 +63,7 @@ To start the Zookeeper server, run the followin command (assuming you're on the 
 
 This will initiate the the server on the current machine, making it acessible from clients on the port specified in `conf/zoo.cfg`.
 
-![Zookeeper server](zookeeper_tutorial/zookeeper_server.png "Zookeeper server")
+![Zookeeper server](zookeeper_tutorial/zookeeper_server.PNG "Zookeeper server")
 
 ## 1.3 Connecting clients to Zookeeper server
 
