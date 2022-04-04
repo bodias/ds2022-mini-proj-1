@@ -18,7 +18,7 @@ class Process:
 		self.state = state
 		self.timeout_upper = timeout_upper
 		self.timer = None
-		self.timeout = None
+		self.timestamp_lamport_like = None
 
 	def __str__(self):
 		return f"{self.id}, {process_states[self.state]}"
@@ -37,9 +37,8 @@ class Process:
 			3. Update timer in loop and then Change state after timing out
 		"""
 		while True:
-			timeout = random.randint(timeout_lower, self.timeout_upper)
-			self.timer = timeout
-			self.timeout = time.monotonic()
+			self.timer = random.randint(timeout_lower, self.timeout_upper)
+			self.timestamp_lamport_like = time.monotonic()
 			if self.state == "want":
 				schedule_work = conn.request_critical_section(self.id)
 				if schedule_work:
@@ -79,7 +78,7 @@ class Process:
 		self.timer -= 1
 
 	def get_timestamp(self):
-		return time.monotonic() - self.timeout
+		return self.timestamp_lamport_like
 
 	"""
 		getter and setter calls
