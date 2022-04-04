@@ -71,12 +71,12 @@ To connect a client to the server using the CLI run the following command:
 
 ```bin/zkCli.sh -server 127.0.0.1:2181```
 
-![Zookeeper client CLI](zookeeper_tutorial/zk_cli.png "Zookeeper client CLI")
+![Zookeeper client CLI](zookeeper_tutorial/zk_cli.PNG "Zookeeper client CLI")
 
 For demonstration purposes we'll connect 4 clients to the server, simulating 4 different nodes of a distributed application. In a real world scenario each one of these clients will be running on a different machine.
 
 To list the commands supported by the CLI type `help`.
-![List of commands available on CLI](zookeeper_tutorial/zk_cli_help.png "List of commands available on CLI")
+![List of commands available on CLI](zookeeper_tutorial/zk_cli_help.PNG "List of commands available on CLI")
 
 Here's the description of the main commands we'll be using:
 * __ls__: List all zNodes.
@@ -88,11 +88,11 @@ In the demo we'll use ephemeral nodes (`-e` option) that don't persist data to t
 
 ## 2. Demo
 
-![Architecture](zookeeper_tutorial/demo.PNG "Architecture")
+![Architecture](zookeeper_tutorial/demo.png "Architecture")
 
 In the demo 4 clients connected to Zookeeper will act as nodes. 3 of them are replica nodes and one is a master node. The goal is to demonstrate how apache zookeeper would act in the case of a failure of a node.
 
-The video of the demo can be accessed here.
+The video of the demo can be accessed [here](zookeeper_tutorial/apache_zookeeper_demo.mp4).
 
 1. Connect 4 clients to the zookeeper server 127.0.0.1:2181.
 

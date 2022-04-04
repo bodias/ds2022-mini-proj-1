@@ -63,8 +63,7 @@ Full Description of the task is [here](https://courses.cs.ut.ee/LTAT.06.007/2022
     $ exit
 ```
 
-## TODO:
+## Apache Zookeeper tutorial:
 
-1. More Testing.
-2. Observe effect of asynchronous callbacks over synchronous.
-3. Documentation.
+See [zookeeper tutorial](zookeeper_tutorial.md)
+
